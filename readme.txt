@@ -177,7 +177,8 @@ for n=1:i
     H2=k+(s(n)*log2(1/s(n)));
     k=H2;
 end
-disp('H(Y):');disp(H2);
+disp('H(Y):');
+disp(H2);
 
 ## 9th practical 
 clc;
@@ -202,71 +203,90 @@ disp(Efficiency);
 
 ## 10 th practical
 
-% %prgm for entropy and MI for noise free channel 
 clc;
-clear all;
-close all;
-i=input('Enter no. of elements=');
-q=input('Enter joint probabilities matrix='); 
-sum=0; 
-%probability P(x)
-for n=1:i 
-    w=0; 
-    for m=1:i 
-        p(n)=w+q(n,m) 
-        w=p(n); 
-    end 
-end 
-disp('P(x):');
-disp(p);
-% entropy H(x) 
-for n=1:i 
- H=sum+(p(n)*log2(1/p(n))); 
- sum=H; 
-end 
-disp('H(x): '); 
-disp(H); 
-%conditional probability matrix 
-for n=1:i 
-    for m=1:i 
-        a(n,m)=q(n,m)/p(n); 
-    end 
-end 
-disp('P(Y/X):'); 
-disp(a); 
-% entropy H(Y/X) 
-d=0; 
-for n=1:i 
-    for m=1:i 
-        if(a(n,m)>0)  
-            H1=d+(a(n,m)*log2(1/a(n,m)));  
-            d=H1 
-        end 
-    end 
-end 
-disp('H(Y/X):');
-disp(H1); 
-% MI 
-m=H-H1; 
-disp('MI=');
-disp(m);
-% probability P(Y) 
-for n=1:i  
-    w=0; 
-    for m=1:i 
-        s(n)=w+q(m,n);  
-        w=s(n); 
-    end 
-end 
-disp('P(Y):'); 
-disp(s); 
-% entropy H(Y) 
-k=0; 
-for n=1:i  
-    H2=k+(s(n)*log2(1/s(n)));  
-    k=H2; 
-end 
-disp('H(Y): '); 
-disp(H2);
+clear;
+
+% Get dimensions of Generator matrix G
+k = input('Enter the number of message bits: ');
+n = input('Enter the length of codewords: ');
+
+fprintf('Enter the Generator matrix G (%d x %d) row-wise:\n', k, n);
+G = zeros(k,n);
+for i = 1:k
+    G(i,:) = input(sprintf('Row %d: ', i));
+end
+
+% Get dimensions of Parity-check matrix H
+r = input('Enter the number of parity-check bits (rows of H): ');
+nc = input('Enter the number of columns of H (should be same as n): ');
+if nc ~= n
+    error('Number of columns of H must be equal to columns of G (code length n).');
+end
+
+fprintf('Enter the Parity-check matrix H (%d x %d) row-wise:\n', r, nc);
+H = zeros(r,nc);
+for i = 1:r
+    H(i,:) = input(sprintf('Row %d: ', i));
+end
+
+% Input message vector
+msg = input(sprintf('Enter the message vector of length %d: ', k));
+if length(msg) ~= k
+    error('Message vector length must be %d', k);
+end
+
+% Encode message: c = m * G mod 2
+codeword = mod(msg * G, 2);
+disp('Encoded codeword:');
+disp(codeword);
+
+% Introduce error (optional)
+err_pos = input(sprintf('Enter error position to flip (1 to %d, 0 for no error): ', n));
+received = codeword;
+if err_pos ~= 0
+    if err_pos > n || err_pos < 1
+        error('Error position must be between 1 and %d or 0 for no error.', n);
+    end
+    received(err_pos) = mod(received(err_pos) + 1, 2); % flip bit at err_pos
+end
+disp('Received vector:');
+disp(received);
+
+% Compute syndrome: s = r * H' mod 2
+s = mod(received * H', 2);
+disp('Syndrome:');
+disp(s);
+
+% Syndrome decoding (simple error correction)
+if all(s == 0)
+    disp('No error detected.');
+    corrected = received;
+else
+    % Attempt to find error position by matching syndrome in columns of H
+    corrected = received;
+    syndrome_found = false;
+    for pos = 1:n
+        if isequal(H(:,pos)', s)
+            fprintf('Error detected at position %d.\n', pos);
+            corrected(pos) = mod(corrected(pos) + 1, 2); % flip bit
+            syndrome_found = true;
+            break;
+        end
+    end
+    if ~syndrome_found
+        disp('Error pattern not found in syndrome table. Unable to correct.');
+    end
+end
+
+disp('Corrected codeword:');
+disp(corrected);
+
+% Extract original message from corrected codeword (assuming systematic code)
+decoded_msg = corrected(1:k);
+disp('Decoded message:');
+disp(decoded_msg);
+
+
+10th
 
 #########################################################################
