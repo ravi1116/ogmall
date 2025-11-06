@@ -58,7 +58,6 @@ scatterplot(y);
 
 
 
-## 6 practical
  
  ##scatterplot
 
@@ -76,6 +75,46 @@ OFF=0;
 y=qammod(x,M);
 figure(2)
 scatterplot(y,N,OFF,"bo");
+
+
+##6th 
+clc;
+clear all;
+close all;
+
+% --- User Input ---
+choice = input('Enter 1:BPSK,2:QPSK,3:MSK,4:16-QAM,5:MPSK,6:MFSK: ');
+M = 16;
+N = 4; % Note: N=log2(M), hardcoded as in the photo
+
+Eb = input('Enter Eb: ');
+No = input('Enter No: ');
+SNR = Eb / No; % Calculate linear SNR
+
+% --- Probability of Error Calculation ---
+Pe = 0; % Initialize Pe
+
+if (choice < 4) % BPSK, QPSK, MSK
+    Pe = 0.5 * erfc(sqrt(SNR));
+end
+
+if (choice == 4) % 16-QAM
+    Pe = 2 * erfc(sqrt(0.4 * SNR));
+end
+
+if (choice == 5) % 16-MPSK
+    % Using the formula from the photo
+    Pe = erfc(sqrt(N * SNR)) * sin(pi / M); 
+end
+
+if (choice == 6) % 16-MFSK
+    % Using the formula from the photo
+    Pe = (M - 1/2) * erfc(sqrt(0.5 * N * SNR));
+end
+
+% --- Display Result ---
+disp('The calculated error probability (Pe) is:');
+display(Pe);
 
 
 ## 7th practical
